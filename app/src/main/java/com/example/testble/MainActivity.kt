@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -49,7 +50,6 @@ class MainActivity : AppCompatActivity() {
             findViewById<Button>(R.id.btn_stop).isEnabled = isEnabled
         }
         val bluetoothLeScanner: BluetoothLeScanner = manager?.adapter?.bluetoothLeScanner!!
-        val scanSettings: ScanSettings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build()
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(
                 Manifest.permission.BLUETOOTH_CONNECT,
@@ -66,11 +66,10 @@ class MainActivity : AppCompatActivity() {
         }
         val btnStart:Button = findViewById(R.id.btn_start)
         val btnStop:Button = findViewById(R.id.btn_stop)
-        btnStop.isEnabled = false
+        val tvStatus:TextView = findViewById(R.id.tv_status)
         btnStart.setOnClickListener {
             changeBtnState(false)
-            val etDeviceFilter:EditText = findViewById(R.id.et_filter)
-            val deviceFilter = etDeviceFilter.text.toString()
+            val deviceFilter = findViewById<EditText>(R.id.et_filter).text.toString()
             if (deviceFilter == "") {
                 btnStart.isEnabled = true
                 Toast.makeText(applicationContext, "検索するデバイス名を入力してください", Toast.LENGTH_LONG).show()
@@ -78,7 +77,9 @@ class MainActivity : AppCompatActivity() {
             }
             val scanFilter: ScanFilter = ScanFilter.Builder().setDeviceName(deviceFilter).build()
             val scanFilterList: ArrayList<ScanFilter> = ArrayList()
+            val scanSettings: ScanSettings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build()
             scanFilterList.add(scanFilter)
+            tvStatus.text = "検索中"
             bluetoothLeScanner.startScan(scanFilterList, scanSettings, scanCallback)
             btnStop.isEnabled = true
         }
@@ -86,8 +87,10 @@ class MainActivity : AppCompatActivity() {
             changeBtnState(false)
             bluetoothLeScanner.stopScan(scanCallback)
             speedMeter?.speed = .0
+            tvStatus.text = getString(R.string.stop_info)
             btnStart.isEnabled = true
         }
+        btnStop.isEnabled = false
     }
     //スキャンで見つかったデバイスが飛んでくる
     private val scanCallback: ScanCallback = object : ScanCallback() {

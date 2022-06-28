@@ -22,6 +22,13 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.16">
 
+        <TextView
+            android:id="@+id/tv_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="検索するデバイス名を入力して検索開始してください" />
+
         <com.cardiomood.android.controls.gauge.SpeedometerGauge
             android:id="@+id/speedometer"
             android:layout_width="wrap_content"
@@ -31,11 +38,20 @@
 
         <EditText
             android:id="@+id/et_filter"
-            android:layout_width="285dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
-            android:hint="デバイスフィルタ" />
+            android:inputType="text"
+            android:hint="デバイス名" />
+
+        <TextView
+            android:id="@+id/tv_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:gravity="center"
+            android:text="@string/stop_info" />
 
         <LinearLayout
             android:id="@+id/linearLayout"

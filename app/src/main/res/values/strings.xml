@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">testble</string>
+    <string name="app_name">BLE機器探知アプリ</string>
+    <string name="stop_info">停止中</string>
 </resources>
