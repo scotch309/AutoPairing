@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.annotation.Nullable
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -19,8 +18,6 @@ import java.security.AccessController.getContext
 
 class MainActivity : AppCompatActivity() {
     private val requestEnableBT = 1
-    //private val speedMeter:SpeedometerGauge = findViewById(R.id.speedometer)
-    private val speedMeter: SpeedometerGauge? = null
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,7 +42,18 @@ class MainActivity : AppCompatActivity() {
         val scanSettings: ScanSettings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build()
         Log.d("TAG", "startScan set")
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN), requestEnableBT)
+            requestPermissions(arrayOf(
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_ADVERTISE,
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_CONTACTS
+            ), requestEnableBT)
         }
         Log.d("mainactivity:", getContext().toString())
         bluetoothLeScanner.startScan(scanFilterList, scanSettings, scanCallback)
@@ -59,9 +67,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
     private fun setSpeedmeterGauge() {
-        if (speedMeter == null) {
-            return
-        }
+        val speedMeter:SpeedometerGauge = findViewById(R.id.speedometer)
         speedMeter.maxSpeed = 300.0
         speedMeter.majorTickStep = 30.0
         speedMeter.minorTicks = 2
