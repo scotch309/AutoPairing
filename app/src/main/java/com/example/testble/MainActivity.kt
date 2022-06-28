@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity() {
     private val requestEnableBT = 1
     private var manager:BluetoothManager? = null
     private var deviceFilter:String = ""
+    private var speedMeter:SpeedometerGauge? = null
 
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,17 +100,17 @@ class MainActivity : AppCompatActivity() {
             if (deviceFilter != result.device.name) {
                 return
             }
-            Log.d("scanResult:", result.device.name)
             Log.d("scanResult:", result.rssi.toString())
+            speedMeter?.speed = -1 * result.rssi.toDouble()
         }
     }
     private fun setSpeedmeterGauge() {
-        val speedMeter:SpeedometerGauge = findViewById(R.id.speedometer)
-        speedMeter.maxSpeed = 300.0
-        speedMeter.majorTickStep = 30.0
-        speedMeter.minorTicks = 2
-        speedMeter.addColoredRange(30.0,140.0, Color.GREEN)
-        speedMeter.addColoredRange(140.0,180.0, Color.YELLOW)
-        speedMeter.addColoredRange(180.0,400.0, Color.RED)
+        speedMeter = findViewById(R.id.speedometer)
+        speedMeter?.maxSpeed = 100.0
+        speedMeter?.majorTickStep = 5.0
+        speedMeter?.minorTicks = 2
+        speedMeter?.addColoredRange(10.0,40.0, Color.GREEN)
+        speedMeter?.addColoredRange(40.0,70.0, Color.YELLOW)
+        speedMeter?.addColoredRange(70.0,100.0, Color.RED)
     }
 }
