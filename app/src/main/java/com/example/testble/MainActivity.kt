@@ -21,7 +21,6 @@ import com.cardiomood.android.controls.gauge.SpeedometerGauge
 class MainActivity : AppCompatActivity() {
     private val requestEnableBT = 1
     private var manager:BluetoothManager? = null
-    private var deviceFilter:String = ""
     private var speedMeter:SpeedometerGauge? = null
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -50,9 +49,6 @@ class MainActivity : AppCompatActivity() {
             findViewById<Button>(R.id.btn_stop).isEnabled = isEnabled
         }
         val bluetoothLeScanner: BluetoothLeScanner = manager?.adapter?.bluetoothLeScanner!!
-        val scanFilter: ScanFilter = ScanFilter.Builder().build()
-        val scanFilterList: ArrayList<ScanFilter> = ArrayList()
-        scanFilterList.add(scanFilter)
         val scanSettings: ScanSettings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build()
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(
@@ -73,33 +69,30 @@ class MainActivity : AppCompatActivity() {
         btnStop.isEnabled = false
         btnStart.setOnClickListener {
             changeBtnState(false)
-            setfilter()
+            val etDeviceFilter:EditText = findViewById(R.id.et_filter)
+            val deviceFilter = etDeviceFilter.text.toString()
+            if (deviceFilter == "") {
+                btnStart.isEnabled = true
+                Toast.makeText(applicationContext, "検索するデバイス名を入力してください", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+            val scanFilter: ScanFilter = ScanFilter.Builder().setDeviceName(deviceFilter).build()
+            val scanFilterList: ArrayList<ScanFilter> = ArrayList()
+            scanFilterList.add(scanFilter)
             bluetoothLeScanner.startScan(scanFilterList, scanSettings, scanCallback)
             btnStop.isEnabled = true
         }
         btnStop.setOnClickListener {
             changeBtnState(false)
             bluetoothLeScanner.stopScan(scanCallback)
+            speedMeter?.speed = .0
             btnStart.isEnabled = true
         }
-    }
-    private fun setfilter() {
-        val etDeviceFilter:EditText = findViewById(R.id.et_filter)
-        deviceFilter = etDeviceFilter.text.toString()
     }
     //スキャンで見つかったデバイスが飛んでくる
     private val scanCallback: ScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             super.onScanResult(callbackType, result)
-            if (result.device.name == null) {
-                return
-            }
-            if (deviceFilter == "") {
-                return
-            }
-            if (deviceFilter != result.device.name) {
-                return
-            }
             Log.d("scanResult:", result.rssi.toString())
             speedMeter?.speed = -1 * result.rssi.toDouble()
         }
@@ -108,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         speedMeter = findViewById(R.id.speedometer)
         speedMeter?.maxSpeed = 100.0
         speedMeter?.majorTickStep = 5.0
-        speedMeter?.minorTicks = 2
+        speedMeter?.minorTicks = 1
         speedMeter?.addColoredRange(10.0,40.0, Color.GREEN)
         speedMeter?.addColoredRange(40.0,70.0, Color.YELLOW)
         speedMeter?.addColoredRange(70.0,100.0, Color.RED)
