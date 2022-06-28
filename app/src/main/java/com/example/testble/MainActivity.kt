@@ -9,6 +9,7 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -18,29 +19,31 @@ import java.security.AccessController.getContext
 
 class MainActivity : AppCompatActivity() {
     private val requestEnableBT = 1
+    private var manager:BluetoothManager? = null
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val manager: BluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        val bluetoothAdapter = manager.adapter
-        if (bluetoothAdapter == null) {
+        manager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        if (manager?.adapter == null) {
             Toast.makeText(applicationContext, "端末サポートされてません", Toast.LENGTH_LONG).show()
             finish()
             return
         }
-        if (!bluetoothAdapter.isEnabled) {
+        if (!manager?.adapter?.isEnabled!!) {
             Toast.makeText(applicationContext, "Bluetoothが無効になっています", Toast.LENGTH_LONG).show()
             finish()
             return
         }
         setSpeedmeterGauge()
-        val bluetoothLeScanner: BluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
+        setBtnAction()
+    }
+    private fun setBtnAction() {
+        val bluetoothLeScanner: BluetoothLeScanner = manager?.adapter?.bluetoothLeScanner!!
         val scanFilter: ScanFilter = ScanFilter.Builder().build()
         val scanFilterList: ArrayList<ScanFilter> = ArrayList()
         scanFilterList.add(scanFilter)
         val scanSettings: ScanSettings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build()
-        Log.d("TAG", "startScan set")
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(
                 Manifest.permission.BLUETOOTH_CONNECT,
@@ -55,14 +58,24 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.READ_CONTACTS
             ), requestEnableBT)
         }
-        Log.d("mainactivity:", getContext().toString())
-        bluetoothLeScanner.startScan(scanFilterList, scanSettings, scanCallback)
+        val btnStart:Button = findViewById(R.id.btn_start)
+        val btnStop:Button = findViewById(R.id.btn_stop)
+        btnStop.isEnabled = false
+        btnStart.setOnClickListener {
+            btnStart.isEnabled = false
+            bluetoothLeScanner.startScan(scanFilterList, scanSettings, scanCallback)
+        }
+        btnStop.setOnClickListener {
+            btnStart.isEnabled = false
+            btnStop.isEnabled = false
+            bluetoothLeScanner.stopScan(scanCallback)
+            btnStart.isEnabled = true
+        }
     }
     //スキャンで見つかったデバイスが飛んでくる
     private val scanCallback: ScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             super.onScanResult(callbackType, result)
-            Log.d("scanResult:", getContext().toString())
             Log.d("scanResult:", result.device.address)
         }
     }
