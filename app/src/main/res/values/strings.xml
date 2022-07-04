@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">BLE機器探知アプリ</string>
-    <string name="stop_info">停止中</string>
+    <string name="searching">検索中</string>
+    <string name="stopping">停止中</string>
 </resources>
