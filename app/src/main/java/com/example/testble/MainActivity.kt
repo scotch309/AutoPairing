@@ -59,6 +59,7 @@ class MainActivity : AppCompatActivity() {
             }
             tvStatus.text = getString(R.string.searching)
             this.scanner?.setFilter(deviceFilter)
+            //this.scanner?.setFilter()
             this.scanner?.setSettings()
             this.scanner?.startScan(this,this, this.scanCallback)
             btnStop.isEnabled = true

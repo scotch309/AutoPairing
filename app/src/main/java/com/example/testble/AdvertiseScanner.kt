@@ -42,6 +42,11 @@ class AdvertiseScanner(activity: Activity, serviceName: String) {
         this.scanFilterList = ArrayList()
         this.scanFilterList.add(filter)
     }
+    fun setFilter() {
+        val filter: ScanFilter = ScanFilter.Builder().build()
+        this.scanFilterList = ArrayList()
+        this.scanFilterList.add(filter)
+    }
     fun setSettings() {
         this.scanSettings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build()
     }
