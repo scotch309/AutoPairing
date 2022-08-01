@@ -68,9 +68,9 @@ class AdvertiseScanner(activity: Activity, serviceName: String) {
                 Manifest.permission.BLUETOOTH_ADVERTISE,
                 Manifest.permission.BLUETOOTH,
                 Manifest.permission.BLUETOOTH_ADMIN,
-                // Manifest.permission.ACCESS_COARSE_LOCATION,
-                // Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                // Manifest.permission.READ_CONTACTS
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_CONTACTS
             ), 1)
         }
 

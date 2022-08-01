@@ -6,6 +6,7 @@ import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
@@ -13,16 +14,17 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class Devices {
-    private var devices: MutableMap<String, MutableList<Int>>? = null
+    private var devices = mutableMapOf<String, MutableList<Int>>()
 
     fun add(uuid:String, rssi:Int) {
-        if (devices == null) {
-            val list = mutableListOf<Int>(rssi)
-        }
-        else {
-
+        if (this.devices[uuid] == null) {
+            this.devices[uuid] = mutableListOf<Int>(rssi)
+        } else {
+            this.devices[uuid]?.add(rssi)
         }
     }
 }
@@ -30,6 +32,7 @@ class Devices {
 class MainActivity : AppCompatActivity() {
     private var scanner:AdvertiseScanner? = null
     private val progressDialog = ProgressDialog.newInstance("検索中")
+    private val devices = Devices()
 
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,17 +63,27 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             btnStart.isEnabled = false
-            progressDialog.show(supportFragmentManager, "TAG")
+            this.progressDialog.show(supportFragmentManager, "TAG")
             this.scanner?.setFilter(deviceFilter)
             //this.scanner?.setFilter()
             this.scanner?.setSettings()
             this.scanner?.startScan(this,this, this.scanCallback)
+            // 5秒後に停止
+            //Executors.newSingleThreadScheduledExecutor().schedule({
+            //    this.stopScan()
+            //}, 5,TimeUnit.SECONDS)
         }
+    }
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun stopScan() {
+        this.scanner?.stopScan(this,this,this.scanCallback)
+        this.progressDialog.dismiss()
     }
     //スキャンで見つかったデバイスが飛んでくる
     private val scanCallback: ScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             super.onScanResult(callbackType, result)
+            devices.add(result.device.address, result.rssi)
             Log.d("scanResult:", result.rssi.toString())
         }
     }
