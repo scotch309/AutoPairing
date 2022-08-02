@@ -15,6 +15,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.requestPermissions
 
+@RequiresApi(Build.VERSION_CODES.S)
 class AdvertiseScanner(activity: Activity, serviceName: String) {
     private var adapter: BluetoothAdapter? =
         (activity.getSystemService(serviceName) as BluetoothManager).adapter
@@ -25,6 +26,7 @@ class AdvertiseScanner(activity: Activity, serviceName: String) {
     init {
         if (this.isSupported() && this.isEnabled()) {
             this.scanner = this.adapter!!.bluetoothLeScanner
+            this.checkPermission(activity.applicationContext, activity)
         }
     }
     fun isSupported(): Boolean {
@@ -50,7 +52,6 @@ class AdvertiseScanner(activity: Activity, serviceName: String) {
     fun setSettings() {
         this.scanSettings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build()
     }
-    @RequiresApi(Build.VERSION_CODES.S)
     fun startScan(context: Context, activity: Activity, callback: ScanCallback) {
         if (!this.isSupported()) {
             return
@@ -58,7 +59,6 @@ class AdvertiseScanner(activity: Activity, serviceName: String) {
         this.checkPermission(context, activity)
         this.scanner!!.startScan(this.scanFilterList, this.scanSettings, callback)
     }
-    @RequiresApi(Build.VERSION_CODES.S)
     private fun checkPermission(context: Context, activity: Activity) {
         if (ActivityCompat.checkSelfPermission(
                 context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
@@ -74,7 +74,6 @@ class AdvertiseScanner(activity: Activity, serviceName: String) {
             ), 1)
         }
     }
-    @RequiresApi(Build.VERSION_CODES.S)
     fun stopScan(context: Context, activity: Activity, callback:ScanCallback) {
         if (!this.isSupported()) {
             return

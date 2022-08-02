@@ -1,41 +1,91 @@
 package com.example.testble
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.util.Log
 import android.widget.Button
 import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class Devices {
-    private var devices = mutableMapOf<String, MutableList<Int>>()
+    private val devices = mutableMapOf<String, MutableList<Int>>()
+    private val results = mutableListOf<ScanResult>()
 
-    fun add(uuid:String, rssi:Int) {
-        if (this.devices[uuid] == null) {
-            this.devices[uuid] = mutableListOf<Int>(rssi)
+    fun add(result: ScanResult) {
+        if (this.devices[result.device.address] == null) {
+            this.devices[result.device.address] = mutableListOf(result.rssi)
+            this.results.add(result)
         } else {
-            this.devices[uuid]?.add(rssi)
+            this.devices[result.device.address]?.add(result.rssi)
         }
     }
     fun getAverage(): Map<String, Double> {
-        var averageDeviceDictionary = mutableMapOf<String, Double>()
+        val averageDeviceDictionary = mutableMapOf<String, Double>()
         this.devices.forEach {(key,value)->
             averageDeviceDictionary[key] = value.average()
         }
-        return averageDeviceDictionary.toList().sortedBy { it.second }.reversed().toMap()
+        //return averageDeviceDictionary.toList().sortedBy { it.second }.reversed().toMap()
+        return averageDeviceDictionary.toList().sortedBy { it.second }.toMap()
     }
     fun clear() {
         this.devices.clear()
+        this.results.clear()
+    }
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun checkPermission(context: Context, activity: Activity) {
+        if (ActivityCompat.checkSelfPermission(
+                context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                activity, arrayOf(
+                    Manifest.permission.BLUETOOTH_CONNECT,
+                    Manifest.permission.BLUETOOTH_SCAN,
+                    Manifest.permission.BLUETOOTH_ADVERTISE,
+                    Manifest.permission.BLUETOOTH,
+                    Manifest.permission.BLUETOOTH_ADMIN,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_CONTACTS
+                ), 1
+            )
+        }
+    }
+    @RequiresApi(Build.VERSION_CODES.S)
+    fun createBond(uuid:String, context: Context, activity: Activity) {
+        this.checkPermission(context, activity)
+        context.applicationContext.registerReceiver(
+            this.broadcastReceiver,
+            IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
+        )
+        for (result in this.results) {
+            if (result.device.address == uuid) {
+                result.device.createBond()
+                break
+            }
+        }
+    }
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when(intent?.action) {
+                BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
+                    Toast.makeText(, "端末サポートされてません", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 }
 
@@ -80,26 +130,27 @@ class MainActivity : AppCompatActivity() {
             this.scanner?.startScan(this,this, this.scanCallback)
             // 5秒後に停止
             Executors.newSingleThreadScheduledExecutor().schedule({
-                this.stopScan()
+                this.scanner?.stopScan(this,this,this.scanCallback)
+                this.progressDialog.dismiss()
+                this.pairing()
                 btnStart.isEnabled = true
             }, 5,TimeUnit.SECONDS)
         }
     }
     @RequiresApi(Build.VERSION_CODES.S)
-    private fun stopScan() {
-        this.scanner?.stopScan(this,this,this.scanCallback)
-        this.progressDialog.dismiss()
-
-        val map: Map<String, Double> = this.devices.getAverage()
+    private fun pairing() {
+        val devices: Map<String, Double> = this.devices.getAverage()
+        for (key in devices.keys) {
+            this.devices.createBond(key,this,this)
+            break
+        }
         this.devices.clear()
-        print("END")
     }
     //スキャンで見つかったデバイスが飛んでくる
     private val scanCallback: ScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             super.onScanResult(callbackType, result)
-            devices.add(result.device.address, result.rssi)
-            Log.d("scanResult:", result.rssi.toString())
+            devices.add(result)
         }
     }
 }
