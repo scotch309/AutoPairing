@@ -73,7 +73,6 @@ class AdvertiseScanner(activity: Activity, serviceName: String) {
                 Manifest.permission.READ_CONTACTS
             ), 1)
         }
-
     }
     @RequiresApi(Build.VERSION_CODES.S)
     fun stopScan(context: Context, activity: Activity, callback:ScanCallback) {

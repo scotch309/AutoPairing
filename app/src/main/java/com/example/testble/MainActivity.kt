@@ -27,6 +27,16 @@ class Devices {
             this.devices[uuid]?.add(rssi)
         }
     }
+    fun getAverage(): Map<String, Double> {
+        var averageDeviceDictionary = mutableMapOf<String, Double>()
+        this.devices.forEach {(key,value)->
+            averageDeviceDictionary[key] = value.average()
+        }
+        return averageDeviceDictionary.toList().sortedBy { it.second }.reversed().toMap()
+    }
+    fun clear() {
+        this.devices.clear()
+    }
 }
 
 class MainActivity : AppCompatActivity() {
@@ -69,15 +79,20 @@ class MainActivity : AppCompatActivity() {
             this.scanner?.setSettings()
             this.scanner?.startScan(this,this, this.scanCallback)
             // 5秒後に停止
-            //Executors.newSingleThreadScheduledExecutor().schedule({
-            //    this.stopScan()
-            //}, 5,TimeUnit.SECONDS)
+            Executors.newSingleThreadScheduledExecutor().schedule({
+                this.stopScan()
+                btnStart.isEnabled = true
+            }, 5,TimeUnit.SECONDS)
         }
     }
     @RequiresApi(Build.VERSION_CODES.S)
     private fun stopScan() {
         this.scanner?.stopScan(this,this,this.scanCallback)
         this.progressDialog.dismiss()
+
+        val map: Map<String, Double> = this.devices.getAverage()
+        this.devices.clear()
+        print("END")
     }
     //スキャンで見つかったデバイスが飛んでくる
     private val scanCallback: ScanCallback = object : ScanCallback() {
